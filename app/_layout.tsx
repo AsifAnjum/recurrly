@@ -8,7 +8,7 @@ SplashScreen.preventAutoHideAsync()
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
-export default function RootLayout() {
+ function RootLayoutContent() {
     const { isLoaded: authLoaded } = useAuth();
 
   const [fontsLoaded] = useFonts({
@@ -29,5 +29,13 @@ export default function RootLayout() {
   }, [fontsLoaded])
   if (!fontsLoaded) return null;
 
-  return <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}><Stack screenOptions={{ headerShown: false }} /></ClerkProvider>;
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+export default function RootLayout() {
+  return (
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <RootLayoutContent />
+    </ClerkProvider>
+  );
 }
