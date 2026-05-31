@@ -22,12 +22,16 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 
 
+
   useEffect(() => {
+    // Hide splash only when both fonts and auth are loaded
     if (fontsLoaded && authLoaded) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync()
     }
-  }, [fontsLoaded])
-  if (!fontsLoaded) return null;
+  }, [fontsLoaded, authLoaded])
+
+  // Don't render app until both are ready
+  if (!fontsLoaded || !authLoaded) return null;
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

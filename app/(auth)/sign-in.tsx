@@ -8,7 +8,7 @@ import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 const SafeAreaView = styled(RNSafeAreaView);
 
 const SignIn = () => {
-    const { signIn, errors, fetchStatus } = useSignIn();
+    const { signIn, errors, fetchStatus, } = useSignIn();
     const router = useRouter();
 
     const [emailAddress, setEmailAddress] = useState('');
@@ -61,24 +61,38 @@ const SignIn = () => {
                 },
             });
         } else if (signIn.status === 'needs_second_factor') {
-            // Handle MFA if needed (not implemented in this basic flow)
-            console.log('MFA required');
-        } else if (signIn.status === 'needs_client_trust') {
-            // Send email code for client trust verification
-            const emailCodeFactor = signIn.supportedSecondFactors.find(
-                (factor) => factor.strategy === 'email_code'
+            // Identify the strategy to use
+            const factor = signIn.supportedSecondFactors.find(
+                (f) => f.strategy === 'email_code' || f.strategy === 'phone_code'
             );
 
-            if (emailCodeFactor) {
+            if (factor?.strategy === 'email_code') {
                 await signIn.mfa.sendEmailCode();
+            } else if (factor?.strategy === 'phone_code') {
+                await signIn.mfa.sendPhoneCode();
             }
+        } else if (signIn.status === 'needs_client_trust') {
+            // Send email code for client trust verification
+            await signIn.mfa.sendEmailCode();
         } else {
             console.error('Sign-in attempt not complete:', signIn);
         }
     };
 
     const handleVerify = async () => {
-        await signIn.mfa.verifyEmailCode({ code });
+        if (signIn.status === 'needs_second_factor') {
+            const factor = signIn.supportedSecondFactors.find(
+                (f) => f.strategy === 'email_code' || f.strategy === 'phone_code'
+            );
+            
+            if (factor?.strategy === 'email_code') {
+                await signIn.mfa.verifyEmailCode({ code });
+            } else if (factor?.strategy === 'phone_code') {
+                await signIn.mfa.verifyPhoneCode({ code });
+            }
+        } else {
+            await signIn.mfa.verifyEmailCode({ code });
+        }
 
         if (signIn.status === 'complete') {
             await signIn.finalize({
@@ -108,8 +122,8 @@ const SignIn = () => {
         }
     };
 
-    // Show verification screen if client trust is needed
-    if (signIn.status === 'needs_client_trust') {
+    // Show verification screen if client trust or MFA is needed
+    if (signIn.status === 'needs_client_trust' || signIn.status === 'needs_second_factor') {
         return (
             <SafeAreaView className="auth-safe-area">
                 <KeyboardAvoidingView
@@ -128,7 +142,7 @@ const SignIn = () => {
                                     <View className="auth-logo-mark">
                                         <Text className="auth-logo-mark-text">R</Text>
                                     </View>
-                                    <View>
+                                    <View >
                                         <Text className="auth-wordmark">Recurrly</Text>
                                         <Text className="auth-wordmark-sub">SUBSCRIPTIONS</Text>
                                     </View>
