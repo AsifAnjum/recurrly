@@ -1,21 +1,25 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, useLocalSearchParams } from "expo-router";
+import { usePostHog } from 'posthog-react-native';
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
-import { posthog } from '../../src/config/posthog';
 
-export default function SubscriptionDetails() {
-  const { id } = useLocalSearchParams<{id: string}>();
+const SubscriptionDetails = () => {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    const posthog = usePostHog();
 
-  useEffect(() => {
-    posthog.capture('subscription_viewed', { subscription_id: id })
-  }, [id])
+    useEffect(() => {
+        // Only capture if id is valid
+        if (id && typeof id === 'string' && id.trim()) {
+            posthog.capture('subscription_details_viewed', { subscription_id: id });
+        }
+    }, [id, posthog]);
 
-  return (
-    <View className="flex-1 items-center justify-center bg-white dark:bg-slate-900">
-      <Text className="text-lg font-semibold text-slate-800 dark:text-white">
-        Subscription ID: {id}
-      </Text>
-      <Link href="/" className='text-blue-500'>Go Back</Link>
-    </View>
-  );
+    return (
+        <View>
+            <Text>Subscription Details: {id}</Text>
+            <Link href="/">Go back</Link>
+        </View>
+    )
 }
+
+export default SubscriptionDetails
