@@ -2,6 +2,7 @@ import { useAuth, useSignUp } from '@clerk/expo';
 import { Link, useRouter, type Href } from 'expo-router';
 import { styled } from 'nativewind';
 import { useState } from 'react';
+import { posthog } from '../../src/config/posthog';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
@@ -50,6 +51,9 @@ const SignUp = () => {
         });
 
         if (signUp.status === 'complete') {
+            posthog.capture('user_signed_up', {
+                email: emailAddress,
+            })
             await signUp.finalize({
                 navigate: ({ session, decorateUrl }) => {
                     if (session?.currentTask) {

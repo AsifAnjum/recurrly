@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import clsx from 'clsx';
+import { posthog } from '../src/config/posthog';
 
 interface CreateSubscriptionModalProps {
   visible: boolean;
@@ -41,10 +42,18 @@ export default function CreateSubscriptionModal({
 
   const handleSubSubmit = () => {
     if (!name.trim() || !price.trim()) return;
-    
+
+    const parsedPrice = parseFloat(price) || 0
+    posthog.capture('subscription_created', {
+      name,
+      price: parsedPrice,
+      billing,
+      category,
+    })
+
     onSubmit({
       name,
-      price: parseFloat(price) || 0,
+      price: parsedPrice,
       billing,
       category,
       paymentMethod: paymentMethod.trim() || 'Visa ending in 0000',
